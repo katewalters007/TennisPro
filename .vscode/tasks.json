@@ -1,0 +1,34 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Run Streamlit Preview",
+      "type": "shell",
+      "command": "streamlit",
+      "args": [
+        "run",
+        "streamlit_app.py",
+        "--server.headless",
+        "true"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "Stop Streamlit Preview",
+      "type": "shell",
+      "command": "pkill",
+      "args": [
+        "-f",
+        "streamlit"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    }
+  ]
+}
