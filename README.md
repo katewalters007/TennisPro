@@ -60,7 +60,16 @@ A comprehensive Streamlit-based tennis training application with user authentica
    pip install -r requirements.txt
    ```
 
-3. **Run the application**
+3. **Choose a database**
+
+  Local development uses SQLite automatically.
+
+  For Streamlit Cloud or any persistent deployment, set a hosted PostgreSQL connection string:
+  ```bash
+  export DATABASE_URL="postgresql://postgres:your_password@db.your-project.supabase.co:5432/postgres?sslmode=require"
+  ```
+
+4. **Run the application**
    ```bash
    streamlit run streamlit_app.py
    ```
@@ -81,7 +90,7 @@ TennisPro/
 ├── streamlit_app.py         # Main Streamlit frontend
 ├── requirements.txt         # Python dependencies
 ├── README.md               # This file
-└── tennis_pro.db           # SQLite database (auto-created)
+└── tennis_pro.db           # Local SQLite fallback database (auto-created)
 ```
 
 ## Database Schema
@@ -136,7 +145,7 @@ TennisPro/
 
 - **Frontend**: Streamlit (Python web framework)
 - **Backend**: Python
-- **Database**: SQLite with SQLAlchemy ORM
+- **Database**: SQLAlchemy ORM with SQLite for local development and PostgreSQL for persistent deployments
 - **Authentication**: bcrypt, PyOTP, QRCode
 - **Visualization**: Plotly
 - **Data Processing**: Pandas, NumPy
@@ -157,9 +166,36 @@ TennisPro/
 
 Set these for production deployments:
 
+- `DATABASE_URL` for a persistent PostgreSQL database
 - `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_FROM_EMAIL`
 - `VERIFICATION_CODE_PEPPER` for verification code hashing hardening
 - `APP_ENCRYPTION_KEY` for optional at-rest encryption of MFA secrets
+
+## Streamlit Cloud Database Setup
+
+For Streamlit Community Cloud, use a hosted PostgreSQL database instead of SQLite so accounts and training data survive restarts.
+
+1. Create a Supabase project.
+2. Open `Project Settings -> Database` and copy the PostgreSQL connection string.
+3. Replace `[YOUR-PASSWORD]` with your database password.
+4. Ensure the URL includes `?sslmode=require`.
+5. In Streamlit Cloud, open `App settings -> Secrets` and add:
+
+  ```toml
+  DATABASE_URL = "postgresql://postgres:[YOUR-PASSWORD]@db.your-project.supabase.co:5432/postgres?sslmode=require"
+  SMTP_HOST = "smtp.gmail.com"
+  SMTP_PORT = "587"
+  SMTP_USERNAME = "your_email@gmail.com"
+  SMTP_PASSWORD = "your_app_password"
+  SMTP_FROM_EMAIL = "your_email@gmail.com"
+  SMTP_USE_TLS = "true"
+  APP_ENCRYPTION_KEY = "replace_with_fernet_key"
+  VERIFICATION_CODE_PEPPER = "replace_with_long_random_secret"
+  ```
+
+6. Save the secrets and reboot the app.
+
+The app creates its tables automatically in PostgreSQL on first startup.
 
 ## Customization
 

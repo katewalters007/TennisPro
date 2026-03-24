@@ -1,15 +1,44 @@
 """Database models and operations for TennisPro."""
-import os
 from datetime import datetime
-from sqlalchemy import create_engine, Column, String, Integer, Float, DateTime, Boolean, ForeignKey, Text
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, relationship
 
-# Database setup
-DATABASE_URL = "sqlite:///./tennis_pro.db"
-engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, Integer, String, Text, create_engine
+from sqlalchemy.engine import make_url
+from sqlalchemy.orm import declarative_base, relationship, sessionmaker
+
+from backend.config import DATABASE_URL
+
+
+def _normalize_database_url(raw_url: str) -> str:
+    """Normalize common database URL variants for SQLAlchemy."""
+    if raw_url.startswith("postgres://"):
+        return raw_url.replace("postgres://", "postgresql://", 1)
+    return raw_url
+
+
+def _create_engine(database_url: str):
+    """Create a database engine with backend-specific settings."""
+    normalized_url = _normalize_database_url(database_url)
+    url = make_url(normalized_url)
+
+    engine_kwargs = {
+        "pool_pre_ping": True,
+        "future": True,
+    }
+
+    if url.drivername.startswith("sqlite"):
+        engine_kwargs["connect_args"] = {"check_same_thread": False}
+
+    return create_engine(normalized_url, **engine_kwargs)
+
+
+engine = _create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
+
+
+def get_database_backend() -> str:
+    """Return the current database backend name for diagnostics."""
+    return engine.url.get_backend_name()
 
 
 class User(Base):

@@ -13,9 +13,18 @@ streamlit run streamlit_app.py
 ```
 
 The app will automatically:
-- Create SQLite database (`tennis_pro.db`)
+- Create a local SQLite database (`tennis_pro.db`) when `DATABASE_URL` is not set
 - Initialize all tables
 - Open in your default browser at `http://localhost:8501`
+
+### 3. Optional: Use a Persistent Hosted Database
+
+For Streamlit Cloud or any deployment where data must survive restarts, set a hosted PostgreSQL connection string before starting the app:
+
+```bash
+export DATABASE_URL="postgresql://postgres:your_password@db.your-project.supabase.co:5432/postgres?sslmode=require"
+streamlit run streamlit_app.py
+```
 
 ## First Time Setup
 
@@ -99,10 +108,10 @@ The app will automatically:
 
 ## Database Files
 
-- **tennis_pro.db**: SQLite database containing all user data
+- **tennis_pro.db**: Local SQLite fallback database when `DATABASE_URL` is not set
 - Located in project root directory
-- Auto-created on first run
-- Backup regularly for important data
+- Auto-created on first run for local development
+- For Streamlit Cloud, use hosted PostgreSQL instead of relying on this file
 
 ## Troubleshooting
 
@@ -114,6 +123,10 @@ pip install -r requirements.txt
 ### Database locked error
 - Close all other instances of the app
 - Delete tennis_pro.db and restart (loses all data)
+
+### Streamlit Cloud loses data after restart
+- Set `DATABASE_URL` to a hosted PostgreSQL database in Streamlit secrets
+- SQLite files on Streamlit Cloud are not persistent
 
 ### Streamlit not responding
 - Press Ctrl+C to stop the server
@@ -139,7 +152,7 @@ pip install -r requirements.txt
 TennisPro/
 ├── streamlit_app.py           # Main application
 ├── requirements.txt           # Dependencies
-├── tennis_pro.db             # Database (created on first run)
+├── tennis_pro.db             # Local SQLite fallback database
 ├── README.md                 # Full documentation
 ├── QUICKSTART.md             # This file
 └── backend/
