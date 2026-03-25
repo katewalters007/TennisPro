@@ -364,33 +364,6 @@ def email_verify_page():
             st.session_state.page = "home"
             st.rerun()
 
-    st.markdown("---")
-    st.markdown("### Email Delivery Diagnostics")
-    email_status = AuthManager.get_email_configuration_status()
-
-    if email_status["configured"]:
-        st.success("SMTP is configured. If Gmail still rejects login, use a Gmail App Password.")
-    else:
-        st.warning(
-            "SMTP is not fully configured. Missing: " + ", ".join(email_status["missing_keys"])
-        )
-
-    st.caption(
-        "Source check: "
-        + ", ".join([f"{key}={source}" for key, source in email_status["sources"].items()])
-    )
-
-    if email_status.get("provider_hint"):
-        st.info(email_status["provider_hint"])
-
-    if st.button("📧 Send Test Email", use_container_width=True, key="mfa_page_test_email"):
-        test_result = AuthManager.send_test_email(st.session_state.user_id)
-        if test_result["success"]:
-            st.success(test_result["message"])
-        else:
-            st.error(test_result["message"])
-
-
 def setup_body_focus():
     """Setup body focus areas for personalized recommendations."""
     st.markdown("<h3 style='font-family: Playfair Display, serif; color: #1e5f3e;'>Where would you like to focus?</h3>", unsafe_allow_html=True)
