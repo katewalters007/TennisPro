@@ -1,11 +1,17 @@
 """Database models and operations for TennisPro."""
+import logging
 from datetime import datetime
 
-from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, Integer, String, Text, create_engine
+from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, Integer, String, Text, create_engine, text
 from sqlalchemy.engine import make_url
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import declarative_base, relationship, sessionmaker
 
 from backend.config import DATABASE_URL
+
+
+logger = logging.getLogger(__name__)
+SQLITE_FALLBACK_URL = "sqlite:///./tennis_pro.db"
 
 
 def _normalize_database_url(raw_url: str) -> str:
@@ -31,7 +37,43 @@ def _create_engine(database_url: str):
     return create_engine(normalized_url, **engine_kwargs)
 
 
-engine = _create_engine(DATABASE_URL)
+def _initialize_engine(database_url: str):
+    """Initialize engine and gracefully fall back to SQLite if connection fails."""
+    try:
+        primary_engine = _create_engine(database_url)
+    except Exception as exc:
+        logger.warning(
+            "Failed to create engine for DATABASE_URL '%s'. "
+            "Falling back to local SQLite database at '%s'. Error: %s",
+            database_url,
+            SQLITE_FALLBACK_URL,
+            exc,
+        )
+        fallback_engine = _create_engine(SQLITE_FALLBACK_URL)
+        with fallback_engine.connect() as connection:
+            connection.execute(text("SELECT 1"))
+        return fallback_engine
+
+    try:
+        with primary_engine.connect() as connection:
+            connection.execute(text("SELECT 1"))
+        return primary_engine
+    except SQLAlchemyError as exc:
+        logger.warning(
+            "Primary database initialization failed for DATABASE_URL '%s'. "
+            "Falling back to local SQLite database at '%s'. Error: %s",
+            database_url,
+            SQLITE_FALLBACK_URL,
+            exc,
+        )
+
+        fallback_engine = _create_engine(SQLITE_FALLBACK_URL)
+        with fallback_engine.connect() as connection:
+            connection.execute(text("SELECT 1"))
+        return fallback_engine
+
+
+engine = _initialize_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
